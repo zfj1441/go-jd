@@ -3,20 +3,20 @@ package main
 import (
 	"flag"
 	"fmt"
+	"go-jd/core"
 	"os"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/Adyzng/go-jd/core"
-	clog "gopkg.in/clog.v1"
+	"unknwon.dev/clog/v2"
 )
 
 func init() {
-	if err := clog.New(clog.CONSOLE, clog.ConsoleConfig{
-		Level:      clog.INFO,
-		BufferSize: 100},
-	); err != nil {
+	err := clog.NewConsole(100, clog.ConsoleConfig{
+		Level: clog.LevelInfo,
+	})
+
+	if err != nil {
 		fmt.Printf("init console log failed. error %+v.", err)
 		os.Exit(1)
 	}
@@ -40,7 +40,7 @@ var (
 
 func main() {
 	flag.Parse()
-	defer clog.Shutdown()
+	defer clog.Stop()
 
 	gs := parseGoods(*goods)
 	clog.Trace("[Area: %+v, Goods: %qv, Period: %+v, Rush: %+v, Order: %+v]",

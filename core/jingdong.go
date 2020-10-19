@@ -22,7 +22,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/axgle/mahonia"
 	sjson "github.com/bitly/go-simplejson"
-	clog "gopkg.in/clog.v1"
+	clog "unknwon.dev/clog/v2"
 )
 
 const (
@@ -102,7 +102,7 @@ func NewJingDong(option JDConfig) *JingDong {
 	})
 
 	if err := jd.jar.Load(); err != nil {
-		clog.Error(0, "加载Cookies失败: %s", err)
+		clog.Error("加载Cookies失败: %s", err)
 		jd.jar.Clean()
 	}
 
@@ -119,7 +119,7 @@ func NewJingDong(option JDConfig) *JingDong {
 func (jd *JingDong) Release() {
 	if jd.jar != nil {
 		if err := jd.jar.Persist(); err != nil {
-			clog.Error(0, "Failed to persist cookiejar. error %+v.", err)
+			clog.Error("Failed to persist cookiejar. error %+v.", err)
 		}
 	}
 }
@@ -153,7 +153,7 @@ func responseData(resp *http.Response) []byte {
 
 	data, err := ioutil.ReadAll(reader)
 	if err != nil {
-		clog.Error(0, "读取响应数据失败: %+v", err)
+		clog.Error("读取响应数据失败: %+v", err)
 		return nil
 	}
 
@@ -254,19 +254,19 @@ func (jd *JingDong) loadQRCode(URL string) (string, error) {
 	u.RawQuery = q.Encode()
 
 	if req, err = http.NewRequest("GET", u.String(), nil); err != nil {
-		clog.Error(0, "请求（%+v）失败: %+v", URL, err)
+		clog.Error("请求（%+v）失败: %+v", URL, err)
 		return "", err
 	}
 
 	applyCustomHeader(req, DefaultHeaders)
 	if resp, err = jd.client.Do(req); err != nil {
-		clog.Error(0, "下载二维码失败: %+v", err)
+		clog.Error("下载二维码失败: %+v", err)
 		return "", err
 	}
 
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		clog.Error(0, "http status : %d/%s", resp.StatusCode, resp.Status)
+		clog.Error("http status : %d/%s", resp.StatusCode, resp.Status)
 	}
 
 	// from mime get QRCode image type
@@ -286,7 +286,7 @@ func (jd *JingDong) loadQRCode(URL string) (string, error) {
 	defer file.Close()
 
 	if _, err = io.Copy(file, resp.Body); err != nil {
-		clog.Error(0, "下载二维码失败: %+v", err)
+		clog.Error("下载二维码失败: %+v", err)
 		return "", err
 	}
 
@@ -343,7 +343,7 @@ func (jd *JingDong) waitForScan(URL string) error {
 
 			var js *sjson.Json
 			if js, err = sjson.NewJson([]byte(respMsg[n1+1 : n2])); err != nil {
-				clog.Error(0, "解析响应数据失败: %+v", err)
+				clog.Error("解析响应数据失败: %+v", err)
 				clog.Trace("Response data  : %+v", respMsg)
 				clog.Trace("Response Header: %+v", resp.Header)
 				break
@@ -391,7 +391,7 @@ func (jd *JingDong) validateQRToken(URL string) error {
 	}
 
 	if resp, err = jd.client.Do(req); err != nil {
-		clog.Error(0, "二维码登陆校验失败: %+v", err)
+		clog.Error("二维码登陆校验失败: %+v", err)
 		return nil
 	}
 
@@ -476,18 +476,18 @@ func (jd *JingDong) CartDetails() error {
 	)
 
 	if req, err = http.NewRequest("GET", URLCartInfo, nil); err != nil {
-		clog.Error(0, "请求（%+v）失败: %+v", URLCartInfo, err)
+		clog.Error("请求（%+v）失败: %+v", URLCartInfo, err)
 		return err
 	}
 
 	if resp, err = jd.client.Do(req); err != nil {
-		clog.Error(0, "获取购物车详情错误: %+v", err)
+		clog.Error("获取购物车详情错误: %+v", err)
 		return err
 	}
 
 	defer resp.Body.Close()
 	if doc, err = goquery.NewDocumentFromReader(resp.Body); err != nil {
-		clog.Error(0, "分析购物车页面错误: %+v.", err)
+		clog.Error("分析购物车页面错误: %+v.", err)
 		return err
 	}
 
@@ -550,18 +550,18 @@ func (jd *JingDong) OrderInfo() error {
 	u.RawQuery = q.Encode()
 
 	if req, err = http.NewRequest("GET", u.String(), nil); err != nil {
-		clog.Error(0, "请求（%+v）失败: %+v", URLCartInfo, err)
+		clog.Error("请求（%+v）失败: %+v", URLCartInfo, err)
 		return err
 	}
 
 	if resp, err = jd.client.Do(req); err != nil {
-		clog.Error(0, "获取订单页错误: %+v", err)
+		clog.Error("获取订单页错误: %+v", err)
 		return err
 	}
 
 	defer resp.Body.Close()
 	if doc, err = goquery.NewDocumentFromReader(resp.Body); err != nil {
-		clog.Error(0, "分析订单页错误: %+v.", err)
+		clog.Error("分析订单页错误: %+v.", err)
 		return err
 	}
 
@@ -614,14 +614,14 @@ func (jd *JingDong) SubmitOrder() (string, error) {
 	})
 
 	if err != nil {
-		clog.Error(0, "提交订单失败: %+v", err)
+		clog.Error("提交订单失败: %+v", err)
 		return "", err
 	}
 
 	var js *sjson.Json
 	if js, err = sjson.NewJson(data); err != nil {
 		clog.Info("Reponse Data: %s", data)
-		clog.Error(0, "无法解析订单响应数据: %+v", err)
+		clog.Error("无法解析订单响应数据: %+v", err)
 		return "", err
 	}
 
@@ -635,7 +635,7 @@ func (jd *JingDong) SubmitOrder() (string, error) {
 
 	res, _ := js.Get("resultCode").String()
 	msg, _ := js.Get("message").String()
-	clog.Error(0, "下单失败, %s : %s", res, msg)
+	clog.Error("下单失败, %s : %s", res, msg)
 	return "", fmt.Errorf("failed to submit order (%s : %s)", res, msg)
 }
 
@@ -691,14 +691,14 @@ func (jd *JingDong) getPrice(ID string) (string, error) {
 	})
 
 	if err != nil {
-		clog.Error(0, "获取商品（%s）价格失败: %+v", ID, err)
+		clog.Error("获取商品（%s）价格失败: %+v", ID, err)
 		return "", err
 	}
 
 	var js *sjson.Json
 	if js, err = sjson.NewJson(data); err != nil {
 		clog.Info("Response Data: %s", data)
-		clog.Error(0, "解析响应数据失败: %+v", err)
+		clog.Error("解析响应数据失败: %+v", err)
 		return "", err
 	}
 
@@ -728,7 +728,7 @@ func (jd *JingDong) stockState(ID string) (string, string, error) {
 	})
 
 	if err != nil {
-		clog.Error(0, "获取商品（%s）库存失败: %+v", ID, err)
+		clog.Error("获取商品（%s）库存失败: %+v", ID, err)
 		return "", "", err
 	}
 
@@ -740,7 +740,7 @@ func (jd *JingDong) stockState(ID string) (string, string, error) {
 	var js *sjson.Json
 	if js, err = sjson.NewJson([]byte(decString)); err != nil {
 		clog.Info("Response Data: %s", data)
-		clog.Error(0, "解析库存数据失败: %+v", err)
+		clog.Error("解析库存数据失败: %+v", err)
 		return "", "", err
 	}
 
@@ -764,13 +764,13 @@ func (jd *JingDong) skuDetail(ID string) (*SKUInfo, error) {
 	itemURL := fmt.Sprintf("http://item.jd.com/%s.html", ID)
 	data, err := jd.getResponse("GET", itemURL, nil)
 	if err != nil {
-		clog.Error(0, "获取商品页面失败: %+v", err)
+		clog.Error("获取商品页面失败: %+v", err)
 		return nil, err
 	}
 
 	doc, err := goquery.NewDocumentFromReader(bytes.NewBuffer(data))
 	if err != nil {
-		clog.Error(0, "解析商品页面失败: %+v", err)
+		clog.Error("解析商品页面失败: %+v", err)
 		return nil, err
 	}
 
@@ -814,7 +814,7 @@ func (jd *JingDong) changeCount(ID string, count int) (int, error) {
 	})
 
 	if err != nil {
-		clog.Error(0, "修改商品数量失败: %+v", err)
+		clog.Error("修改商品数量失败: %+v", err)
 		return 0, err
 	}
 
@@ -838,7 +838,7 @@ func (jd *JingDong) buyGood(sku *SKUInfo) error {
 		time.Sleep(jd.Period)
 		sku.State, sku.StateName, err = jd.stockState(sku.ID)
 		if err != nil {
-			clog.Error(0, "获取(%s)库存失败: %+v", sku.ID, err)
+			clog.Error("获取(%s)库存失败: %+v", sku.ID, err)
 			return err
 		}
 	}
@@ -854,17 +854,17 @@ func (jd *JingDong) buyGood(sku *SKUInfo) error {
 	}
 
 	if _, err := url.Parse(sku.Link); err != nil {
-		clog.Error(0, "商品购买链接无效: <%s>", sku.Link)
+		clog.Error("商品购买链接无效: <%s>", sku.Link)
 		return fmt.Errorf("无效商品购买链接<%s>", sku.Link)
 	}
 
 	if data, err = jd.getResponse("GET", sku.Link, nil); err != nil {
-		clog.Error(0, "商品(%s)购买失败: %+v", sku.ID, err)
+		clog.Error("商品(%s)购买失败: %+v", sku.ID, err)
 		return err
 	}
 
 	if doc, err = goquery.NewDocumentFromReader(bytes.NewBuffer(data)); err != nil {
-		clog.Error(0, "响应解析失败: %+v", err)
+		clog.Error("响应解析失败: %+v", err)
 		return err
 	}
 
